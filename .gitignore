@@ -7,3 +7,4 @@ backend/.env
 backend/scripts/seed-accounts.config.json
 *.log
 .DS_Store
+*.tsbuildinfo
