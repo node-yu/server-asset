@@ -48,7 +48,7 @@ function Copyable({ text, children, onCopied, className = '' }: { text: string; 
 
 function DailyCostQueryPanel({ accounts, onReorder, load, toast }: {
   accounts: AwsAccount[];
-  onReorder: (ids: number[]) => Promise<unknown>;
+  onReorder: (ids: number[]) => Promise<void>;
   load: () => void;
   toast: { success: (m: string) => void; error: (m: string) => void };
 }) {
@@ -402,7 +402,7 @@ function DailyCostQueryPanel({ accounts, onReorder, load, toast }: {
 
 function DailyCostQueryList({ accounts, onReorder, load, toast }: {
   accounts: AwsAccount[];
-  onReorder: (ids: number[]) => Promise<unknown>;
+  onReorder: (ids: number[]) => Promise<void>;
   load: () => void;
   toast: { success: (m: string) => void; error: (m: string) => void };
 }) {
@@ -1219,7 +1219,7 @@ export default function AwsCost() {
         )}
 
         {!loading && !error && activeTab === 'dailyQuery' && (
-          <DailyCostQueryPanel accounts={accounts} onReorder={handleCostQueryReorder} load={load} toast={toast} />
+          <DailyCostQueryPanel accounts={accounts} onReorder={async (ids) => { await handleCostQueryReorder(ids); }} load={load} toast={toast} />
         )}
       </div>
 

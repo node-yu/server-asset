@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { DollarSign, ChevronLeft, ChevronRight, PieChart, BarChart3, TrendingUp, TrendingDown, Calendar, Layers, Activity, Download, BarChart2, Server } from 'lucide-react';
+import { DollarSign, ChevronLeft, ChevronRight, PieChart, BarChart3, Calendar, Layers, Activity, Download, BarChart2, Server } from 'lucide-react';
 import { api } from '../api';
 import { useToast } from '../components/Toast';
 import { ConfirmModal } from '../components/ConfirmModal';
@@ -19,7 +19,6 @@ import {
   LineChart,
   Line,
   LabelList,
-  Text,
 } from 'recharts';
 
 type CompareDimension = 'project' | 'group' | 'platform' | 'month';
@@ -725,7 +724,7 @@ export default function Dashboard() {
                              <LabelList
                               dataKey="费用"
                               position="right"
-                              content={(props: { x?: number | string; y?: number | string; width?: number | string; height?: number | string; value?: unknown }) => {
+                              content={((props: { x?: number | string; y?: number | string; width?: number | string; height?: number | string; value?: unknown }) => {
                                 const { x = 0, y = 0, width = 0, height = 0, value } = props;
                                 const val = typeof value === 'number' ? value : Number(value) || 0;
                                 const barEndX = Number(x) + Number(width);
@@ -736,7 +735,7 @@ export default function Dashboard() {
                                     </text>
                                   </g>
                                 );
-                              }}
+                              }) as React.ComponentProps<typeof LabelList>['content']}
                             />
                              {chartData.map((_, index) => (
                                 <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />

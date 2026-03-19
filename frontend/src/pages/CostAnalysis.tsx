@@ -4,8 +4,6 @@ import {
   ArrowLeft,
   TrendingUp,
   TrendingDown,
-  PieChart,
-  BarChart3,
   Calendar,
   AlertCircle,
   DollarSign,
@@ -36,9 +34,7 @@ const CHART_COLORS = [
   '#6366f1', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#f43f5e', '#84cc16',
 ];
 
-const LABEL_LINE_HEIGHT = 20;
 const LABEL_HORIZONTAL = 20;
-const LABEL_BASE_OFFSET = 10;
 const MIN_GAP = 18; // 最小垂直间距
 
 /** 计算并调整标签位置，进行碰撞检测 */
@@ -83,9 +79,6 @@ function calculateLabelLayout(data: { name: string; value: number }[], total: nu
     }
     // 整体居中调整：如果整体偏下，往上挪
     if (list.length > 0) {
-      const topY = list[0].finalY;
-      const bottomY = list[list.length - 1].finalY;
-      const height = bottomY - topY;
       // 这里可以根据容器高度做限制，暂且假设容器够大
       // 简单策略：如果最上面的点跑太高了，整体下移；反之亦然。
       // 但其实 PieChart 是居中的，我们只要保证相对间距即可。
@@ -163,7 +156,7 @@ function PieLabelPercent(props: {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <text x={x3} y={y2} textAnchor={textAnchor} dx={dx} dy={4} fontSize={11} fill={segmentColor} fontWeight={600}>
+      <text x={x3} y={y2} textAnchor={textAnchor as 'start' | 'end'} dx={dx} dy={4} fontSize={11} fill={segmentColor} fontWeight={600}>
         {(percent * 100).toFixed(1)}%
       </text>
     </g>

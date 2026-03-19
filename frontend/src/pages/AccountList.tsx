@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, Eye, X, Check } from 'lucide-react';
+import { Plus, Pencil, Trash2, Eye, X } from 'lucide-react';
 import { api } from '../api';
 import { useToast } from '../components/Toast';
 import { ConfirmModal } from '../components/ConfirmModal';
