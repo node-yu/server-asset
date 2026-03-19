@@ -738,7 +738,7 @@ export default function Dashboard() {
                                 );
                               }}
                             />
-                             {chartData.map((entry, index) => (
+                             {chartData.map((_, index) => (
                                 <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                              ))}
                           </Bar>
@@ -863,7 +863,7 @@ export default function Dashboard() {
                    </div>
                    {(costBreakdown as unknown as { filterProjectNames?: string[] | null })?.filterProjectNames && selectedGroupIds.length > 0 && (
                      <p className="text-xs text-slate-500 mt-2">
-                       当前筛选包含的项目：{(costBreakdown as unknown as { filterProjectNames: string[] }).filterProjectNames.join('、')}
+                       当前筛选包含的项目：{((costBreakdown as Record<string, unknown>).filterProjectNames as string[] | undefined)?.join('、') ?? ''}
                        （若项目归属有误，请到「项目管理」中调整项目所属分组）
                      </p>
                    )}
