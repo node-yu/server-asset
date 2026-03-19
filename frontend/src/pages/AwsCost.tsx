@@ -48,7 +48,7 @@ function Copyable({ text, children, onCopied, className = '' }: { text: string; 
 
 function DailyCostQueryPanel({ accounts, onReorder, load, toast }: {
   accounts: AwsAccount[];
-  onReorder: (ids: number[]) => Promise<void>;
+  onReorder: (ids: number[]) => Promise<unknown>;
   load: () => void;
   toast: { success: (m: string) => void; error: (m: string) => void };
 }) {
@@ -402,7 +402,7 @@ function DailyCostQueryPanel({ accounts, onReorder, load, toast }: {
 
 function DailyCostQueryList({ accounts, onReorder, load, toast }: {
   accounts: AwsAccount[];
-  onReorder: (ids: number[]) => Promise<void>;
+  onReorder: (ids: number[]) => Promise<unknown>;
   load: () => void;
   toast: { success: (m: string) => void; error: (m: string) => void };
 }) {

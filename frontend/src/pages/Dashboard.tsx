@@ -401,7 +401,7 @@ export default function Dashboard() {
           name: m.label,
           总费用: m.total,
           ...m.byProject,
-          ...(m.byGroup || {}),
+          ...((m as { byGroup?: Record<string, number> }).byGroup || {}),
           ...m.byPlatform,
         }))
       : dimension === 'group'
@@ -654,8 +654,8 @@ export default function Dashboard() {
                             </span>
                             <span className="text-slate-800 text-xl font-bold font-mono">
                               ${activeIndex !== undefined 
-                                ? (typeof chartData[activeIndex].费用 === 'number' ? chartData[activeIndex].费用 : Number(String(chartData[activeIndex].费用).replace('/','.')) || 0).toFixed(2)
-                                : chartData.reduce((s, d) => s + (typeof d.费用 === 'number' ? d.费用 : Number(String(d.费用).replace('/','.')) || 0), 0).toFixed(2)
+                                ? ((chartData[activeIndex] as { 费用?: number; 总费用?: number }).费用 ?? (chartData[activeIndex] as { 总费用?: number }).总费用 ?? 0).toFixed(2)
+                                : chartData.reduce((s, d) => s + ((d as { 费用?: number; 总费用?: number }).费用 ?? (d as { 总费用?: number }).总费用 ?? 0), 0).toFixed(2)
                               }
                             </span>
                           </div>
@@ -665,8 +665,9 @@ export default function Dashboard() {
                         <div className="w-1/2 pl-4 h-64 overflow-y-auto pr-2 custom-scrollbar">
                           <div className="flex flex-col gap-2">
                             {chartData.map((item, i) => {
-                              const val = typeof item.费用 === 'number' ? item.费用 : Number(String(item.费用).replace('/', '.')) || 0;
-                              const total = chartData.reduce((s, d) => s + (typeof d.费用 === 'number' ? d.费用 : Number(String(d.费用).replace('/', '.')) || 0), 0);
+                              const d = item as { 费用?: number; 总费用?: number };
+                              const val = d.费用 ?? d.总费用 ?? 0;
+                              const total = chartData.reduce((s, x) => s + ((x as { 费用?: number; 总费用?: number }).费用 ?? (x as { 总费用?: number }).总费用 ?? 0), 0);
                               const percent = total > 0 ? (val / total) * 100 : 0;
                               
                               return (
@@ -724,7 +725,7 @@ export default function Dashboard() {
                              <LabelList
                               dataKey="费用"
                               position="right"
-                              content={(props: { x?: number; y?: number; width?: number; height?: number; value?: unknown }) => {
+                              content={(props: { x?: number | string; y?: number | string; width?: number | string; height?: number | string; value?: unknown }) => {
                                 const { x = 0, y = 0, width = 0, height = 0, value } = props;
                                 const val = typeof value === 'number' ? value : Number(value) || 0;
                                 const barEndX = Number(x) + Number(width);
@@ -860,9 +861,9 @@ export default function Dashboard() {
                        </label>
                      ))}
                    </div>
-                   {(costBreakdown as { filterProjectNames?: string[] | null })?.filterProjectNames && selectedGroupIds.length > 0 && (
+                   {(costBreakdown as unknown as { filterProjectNames?: string[] | null })?.filterProjectNames && selectedGroupIds.length > 0 && (
                      <p className="text-xs text-slate-500 mt-2">
-                       当前筛选包含的项目：{(costBreakdown as { filterProjectNames: string[] }).filterProjectNames.join('、')}
+                       当前筛选包含的项目：{(costBreakdown as unknown as { filterProjectNames: string[] }).filterProjectNames.join('、')}
                        （若项目归属有误，请到「项目管理」中调整项目所属分组）
                      </p>
                    )}
@@ -906,7 +907,7 @@ export default function Dashboard() {
                         let isFirstInProject = true;
                         vendorOrder.forEach((vendor) => {
                           const vendorRows = vendorGroups[vendor] || [];
-                          vendorRows.forEach((r, idx) => {
+                          vendorRows.forEach((r) => {
                             const key = `${r.project}::${r.platform}::${r.usage}`;
                             const lastVal = r.lastCost ?? 0;
                             const change = lastVal > 0

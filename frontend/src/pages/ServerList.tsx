@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, Eye, EyeOff, X, Check, Download, Upload, Filter, Server as ServerIcon, Search, Calendar, DollarSign, Globe, Hash, AlertCircle, ChevronLeft, ChevronRight, ArrowRightLeft, Edit3 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Eye, EyeOff, X, Check, Download, Upload, Filter, Server as ServerIcon, Globe, Hash, AlertCircle, ChevronLeft, ChevronRight, ArrowRightLeft, Edit3 } from 'lucide-react';
 import { api } from '../api';
 import type { Server, ServerFormData } from '../types';
 import { useToast } from '../components/Toast';

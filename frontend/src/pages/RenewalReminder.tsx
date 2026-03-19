@@ -90,7 +90,7 @@ export default function RenewalReminder() {
   const [renewalSaving, setRenewalSaving] = useState(false);
   const [platforms, setPlatforms] = useState<{ id: number; name: string }[]>([]);
   const [platformsNeedingConfig, setPlatformsNeedingConfig] = useState<string[]>([]);
-  const [defaultRenewalConfig, setDefaultRenewalConfig] = useState<{ renewalType: string; dayOfMonth: number | null } | null>(null);
+  const [, setDefaultRenewalConfig] = useState<{ renewalType: string; dayOfMonth: number | null } | null>(null);
   const [defaultRenewalForm, setDefaultRenewalForm] = useState({ renewalType: 'calendar_month' as string, dayOfMonth: 1 });
   const [defaultRenewalSaving, setDefaultRenewalSaving] = useState(false);
   const [viewMode, setViewMode] = useState<'summary' | 'detail'>('summary');
@@ -319,7 +319,6 @@ export default function RenewalReminder() {
 
   const openEdit = (item: ReminderItem) => {
     if (item.type !== 'custom') return;
-    const id = item.id.replace('custom-', '');
     setEditItem(item);
     setForm({
       name: item.name,
@@ -1034,7 +1033,7 @@ export default function RenewalReminder() {
                   />
                 )}
                 <button
-                  onClick={handleAddRenewalConfig}
+                  onClick={() => handleAddRenewalConfig()}
                   disabled={renewalSaving || !renewalForm.provider.trim()}
                   className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-50"
                 >

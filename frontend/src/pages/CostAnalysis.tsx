@@ -150,6 +150,7 @@ function PieLabelPercent(props: {
   const x3 = layout.x3 + cx;
   const dx = layout.textAnchor === 'start' ? 6 : -6;
   const path = `M ${x1} ${y1} L ${x2} ${y2} L ${x3} ${y2}`;
+  const textAnchor = (layout.textAnchor === 'start' || layout.textAnchor === 'end' ? layout.textAnchor : 'end') as 'start' | 'end';
 
   return (
     <g>
@@ -162,7 +163,7 @@ function PieLabelPercent(props: {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <text x={x3} y={y2} textAnchor={layout.textAnchor} dx={dx} dy={4} fontSize={11} fill={segmentColor} fontWeight={600}>
+      <text x={x3} y={y2} textAnchor={textAnchor} dx={dx} dy={4} fontSize={11} fill={segmentColor} fontWeight={600}>
         {(percent * 100).toFixed(1)}%
       </text>
     </g>
