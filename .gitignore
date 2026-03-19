@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.env
+.env.local
+.env.*.local
+backend/.env
+backend/scripts/seed-accounts.config.json
+*.log
+.DS_Store

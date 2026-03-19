@@ -1,0 +1,13 @@
+# 避免将本地 node_modules 和构建产物复制进镜像（可能导致权限问题）
+backend/node_modules
+backend/dist
+frontend/node_modules
+frontend/dist
+# 敏感配置不进入镜像
+.env
+backend/.env
+backend/scripts/seed-accounts.config.json
+# 其他
+.git
+*.md
+*.log

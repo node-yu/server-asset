@@ -1,0 +1,385 @@
+// Prisma Schema - 服务器资产与财务管理系统
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Server {
+  id               Int       @id @default(autoincrement())
+  platform         String    @db.VarChar(100)
+  platformAccountId Int?     @map("platform_account_id")
+  platformAccount  PlatformAccount? @relation(fields: [platformAccountId], references: [id], onDelete: SetNull)
+  hostname         String    @db.VarChar(255)
+  ip           String    @db.VarChar(45)
+  password     String    @db.Text // 加密存储
+  project      String    @db.VarChar(100)
+  status       String    @db.VarChar(50) // 运行中/已停止/已过期 等
+  config       String?   @db.Text
+  region       String?   @db.VarChar(100)
+  bandwidthType String?  @map("bandwidth_type") @db.VarChar(50)
+  serverType   String?   @map("server_type") @db.VarChar(50)
+  manager      String?   @db.VarChar(100)
+  usage        String?   @db.VarChar(255)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  cancelAt     DateTime? @map("cancel_at")
+  monthlyCost  Float     @default(0) @map("monthly_cost")
+  notes        String?   @db.Text
+  projectTransfers ServerProjectTransfer[]
+
+  @@map("servers")
+}
+
+model ServerProjectTransfer {
+  id           Int      @id @default(autoincrement())
+  serverId     Int      @map("server_id")
+  server       Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  fromProject  String   @map("from_project") @db.VarChar(100)
+  toProject    String   @map("to_project") @db.VarChar(100)
+  transferDate DateTime @map("transfer_date")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("server_project_transfers")
+}
+
+model Group {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique @db.VarChar(100)
+  createdAt DateTime @default(now()) @map("created_at")
+  projects  Project[]
+
+  @@map("groups")
+}
+
+model Project {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(100)
+  color     String?  @db.VarChar(20) // 项目专属颜色，如 #6366f1 或 blue
+  groupId   Int      @map("group_id")
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([groupId, name])
+  @@map("projects")
+}
+
+model Platform {
+  id            Int      @id @default(autoincrement())
+  name          String   @unique @db.VarChar(100)
+  isIdcSupplier Boolean  @default(false) @map("is_idc_supplier")
+  createdAt     DateTime @default(now()) @map("created_at")
+  accounts      PlatformAccount[]
+
+  @@map("platforms")
+}
+
+model PlatformAccount {
+  id        Int      @id @default(autoincrement())
+  platformId Int     @map("platform_id")
+  platform  Platform @relation(fields: [platformId], references: [id], onDelete: Cascade)
+  accountName String @map("account_name") @db.VarChar(255)
+  password  String  @db.Text
+  notes     String? @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  servers   Server[]
+  idcRegistrations IDCRegistration[]
+
+  @@map("platform_accounts")
+}
+
+model IDCRegistration {
+  id                Int      @id @default(autoincrement())
+  platformAccountId Int      @map("platform_account_id")
+  platformAccount   PlatformAccount @relation(fields: [platformAccountId], references: [id], onDelete: Cascade)
+  region            String   @db.VarChar(100)
+  config            String   @db.VarChar(100)
+  serverCount       Int      @default(0) @map("server_count")
+  bandwidth         Int      @default(0)
+  configCost        Float    @default(0) @map("config_cost")
+  bandwidthCost     Float    @default(0) @map("bandwidth_cost")
+  notes             String?  @db.Text
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  adjustments       IDCAdjustment[]
+
+  @@map("idc_registrations")
+}
+
+model IDCAdjustment {
+  id                Int      @id @default(autoincrement())
+  idcRegistrationId Int      @map("idc_registration_id")
+  idcRegistration   IDCRegistration @relation(fields: [idcRegistrationId], references: [id], onDelete: Cascade)
+  adjustmentDate    DateTime @map("adjustment_date")
+  serverCountDelta  Int      @default(0) @map("server_count_delta")
+  bandwidthDelta    Int      @default(0) @map("bandwidth_delta")
+  note              String?  @db.VarChar(500)
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  @@map("idc_adjustments")
+}
+
+model IdcRegionCost {
+  id       Int      @id @default(autoincrement())
+  year     Int
+  month    Int
+  platform String   @db.VarChar(100)
+  region   String   @db.VarChar(100)
+  project  String   @db.VarChar(100)
+  cost     Float    @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([year, month, platform, region, project])
+  @@map("idc_region_costs")
+}
+
+model MonthlyStatsSnapshot {
+  id        Int      @id @default(autoincrement())
+  year      Int
+  month     Int
+  project   String   @default("") @db.VarChar(100)
+  platform  String   @db.VarChar(100)
+  usage     String   @db.VarChar(255)
+  quantity  Int      @default(0)
+  cost      Float    @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([year, month, project, platform, usage])
+  @@map("monthly_stats_snapshots")
+}
+
+model AwsAccount {
+  id                 Int      @id @default(autoincrement())
+  name               String   @unique @db.VarChar(255)
+  awsAccountId       String?  @map("aws_account_id") @db.VarChar(20)
+  loginAccount       String?  @map("login_account") @db.VarChar(255)
+  password           String?  @db.Text
+  supplier           String?  @db.VarChar(100)
+  loginMethod        String?  @map("login_method") @db.VarChar(50)
+  accountType        String?  @map("account_type") @db.VarChar(50)
+  accessKeyId        String?  @map("access_key_id") @db.VarChar(255)
+  secretAccessKey    String?  @map("secret_access_key") @db.Text
+  proxy              String?  @db.VarChar(255)
+  mfa                String?  @db.VarChar(255)
+  notes              String?  @db.Text
+  costQueryStatus    String?  @map("cost_query_status") @db.VarChar(20) // full=需全量操作 cost_only=仅查询费用
+  costQueryEnabled   Boolean  @default(false) @map("cost_query_enabled") // 是否加入每日费用查询
+  costQuerySortOrder Int      @default(0) @map("cost_query_sort_order") // 每日费用查询中的排序
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @default(now()) @updatedAt @map("updated_at")
+  costs              AwsCost[]
+  dailyCosts         AwsDailyCost[]
+
+  @@map("aws_accounts")
+}
+
+model AwsDailyCost {
+  id        Int       @id @default(autoincrement())
+  accountId Int       @map("account_id")
+  account   AwsAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  date      DateTime  @db.Date
+  amount    Float     @default(0)
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@unique([accountId, date])
+  @@map("aws_daily_costs")
+}
+
+model AwsDailyCostJobLog {
+  id          Int      @id @default(autoincrement())
+  startedAt   DateTime @map("started_at")
+  finishedAt  DateTime @map("finished_at")
+  durationMs  Int      @map("duration_ms")
+  queryDate   String   @map("query_date") @db.VarChar(10)
+  totalCount  Int      @map("total_count")
+  successCount Int     @map("success_count")
+  failedCount  Int     @map("failed_count")
+  syncCostOk   Boolean @map("sync_cost_ok")
+
+  @@map("aws_daily_cost_job_logs")
+}
+
+model DoAccount {
+  id                 Int      @id @default(autoincrement())
+  name               String   @unique @db.VarChar(255)
+  token              String?  @db.Text
+  notes              String?  @db.Text
+  costQueryEnabled   Boolean  @default(true) @map("cost_query_enabled")
+  costQuerySortOrder Int      @default(0) @map("cost_query_sort_order")
+  createdAt          DateTime @default(now()) @map("created_at")
+  dailyCosts         DoDailyCost[]
+  costs              DoCost[]
+
+  @@map("do_accounts")
+}
+
+model DoDailyCost {
+  id        Int       @id @default(autoincrement())
+  accountId Int       @map("account_id")
+  account   DoAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  date      DateTime  @db.Date
+  amount    Float     @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([accountId, date])
+  @@map("do_daily_costs")
+}
+
+model DoCost {
+  id        Int       @id @default(autoincrement())
+  accountId Int       @map("account_id")
+  account   DoAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  year      Int
+  month     Int
+  project   String    @db.VarChar(100)
+  usage     String?   @db.VarChar(255)
+  amount    Float     @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("do_costs")
+}
+
+model LinodeAccount {
+  id                 Int      @id @default(autoincrement())
+  name               String   @unique @db.VarChar(255)
+  token              String?  @db.Text
+  notes              String?  @db.Text
+  costQueryEnabled   Boolean  @default(true) @map("cost_query_enabled")
+  costQuerySortOrder Int      @default(0) @map("cost_query_sort_order")
+  createdAt          DateTime @default(now()) @map("created_at")
+  dailyCosts         LinodeDailyCost[]
+  costs              LinodeCost[]
+
+  @@map("linode_accounts")
+}
+
+model LinodeDailyCost {
+  id        Int       @id @default(autoincrement())
+  accountId Int       @map("account_id")
+  account   LinodeAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  date      DateTime  @db.Date
+  amount    Float     @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([accountId, date])
+  @@map("linode_daily_costs")
+}
+
+model LinodeCost {
+  id        Int       @id @default(autoincrement())
+  accountId Int       @map("account_id")
+  account   LinodeAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  year      Int
+  month     Int
+  project   String    @db.VarChar(100)
+  usage     String?   @db.VarChar(255)
+  amount    Float     @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("linode_costs")
+}
+
+model AwsCost {
+  id          Int        @id @default(autoincrement())
+  accountId   Int        @map("account_id")
+  account     AwsAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  year        Int
+  month       Int
+  project     String     @db.VarChar(100)
+  usage       String?    @db.VarChar(255)
+  amount      Float      @default(0)
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  @@map("aws_costs")
+}
+
+model Domain {
+  id          Int      @id @default(autoincrement())
+  domain      String   @db.VarChar(255)
+  provider    String   @db.VarChar(50) // porkbun | namecheap | godaddy
+  createDate  String   @map("create_date") @db.VarChar(20)
+  expireDate  String   @map("expire_date") @db.VarChar(20)
+  autoRenew   Boolean  @default(false) @map("auto_renew")
+  isExpired   Boolean  @default(false) @map("is_expired")
+  status      String?  @db.VarChar(100) // GoDaddy: ACTIVE, CANCELLED 等
+  renewalPrice String? @map("renewal_price") @db.VarChar(50)
+  project     String?  @db.VarChar(100)
+  usage       String?  @db.VarChar(255)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  usageHistory DomainUsageHistory[]
+
+  @@unique([domain, provider])
+  @@map("domains")
+}
+
+model DomainUsageHistory {
+  id        Int      @id @default(autoincrement())
+  domainId  Int      @map("domain_id")
+  domain    Domain   @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  project   String?  @db.VarChar(100)
+  usage     String?  @db.VarChar(255)
+  changedAt DateTime @default(now()) @map("changed_at")
+
+  @@map("domain_usage_history")
+}
+
+model DomainSyncConfig {
+  id              Int       @id @default(autoincrement())
+  syncIntervalDays Int      @map("sync_interval_days") // 3, 7, 14 等
+  lastSyncAt      DateTime? @map("last_sync_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@map("domain_sync_config")
+}
+
+model CustomReminder {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(255)
+  expireAt    DateTime @map("expire_at")
+  category    String?  @db.VarChar(100) // 自定义分类，如 SSL、订阅 等
+  notes       String?  @db.Text
+  linkUrl     String?  @map("link_url") @db.VarChar(500) // 续费链接
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("custom_reminders")
+}
+
+model ReminderExcludedProvider {
+  id       Int      @id @default(autoincrement())
+  provider String   @unique @db.VarChar(100) // 服务器平台/域名商名称，如 GThost、Porkbun
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("reminder_excluded_providers")
+}
+
+// 供应商续费方式配置：用于在 cancelAt 为空时自动推算下次续费日
+model ProviderRenewalConfig {
+  id           Int      @id @default(autoincrement())
+  provider     String   @unique @db.VarChar(100) // 平台/供应商名称，如 GThost、namecheap
+  renewalType  String   @map("renewal_type") @db.VarChar(30) // calendar_month | day_of_month | cycle_30 | cycle_31
+  dayOfMonth   Int?     @map("day_of_month") // 1-31，仅 day_of_month 时使用
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("provider_renewal_configs")
+}
+
+model ReminderRenewedRecord {
+  id        Int      @id @default(autoincrement())
+  type      String   @db.VarChar(20) // server | domain | custom
+  refId     Int      @map("ref_id") // serverId / domainId / customReminderId
+  expireAt  DateTime @map("expire_at") // 对应的到期日，用于精确匹配
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([type, refId, expireAt])
+  @@map("reminder_renewed_records")
+}

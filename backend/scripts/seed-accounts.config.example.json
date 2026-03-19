@@ -1,0 +1,11 @@
+{
+  "do": [
+    { "name": "idc@nodelink.it", "token": "dop_v1_..." },
+    { "name": "luyz@nodelink.it", "token": "dop_v1_..." }
+  ],
+  "linode": [
+    { "name": "optimizenet", "token": "72f59a74..." },
+    { "name": "jiachuang", "token": "8b99a3c7..." },
+    { "name": "chopix", "token": "2bee61f4..." }
+  ]
+}
